@@ -1,0 +1,6 @@
+Flask
+flask-mysqldb
+gunicorn
+python-telegram-bot
+Flask-SQLAlchemy
+pymysql

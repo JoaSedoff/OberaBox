@@ -1,0 +1,715 @@
+{% extends "base.html" %}
+
+{% block title %}Calculadora de Espacio OberáBox{% endblock %}
+
+{% block head_extra %}
+    <style>
+
+        /*Google material icon*/
+        .material-symbols-outlined {
+        font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 48
+        }
+        /* Estilos generales para el card principal */
+        .card {
+            border-radius: 0.75rem;
+            border: none;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15); /* Sombra que funciona bien en ambos temas */
+        }
+
+        /* Divisor bajo el título principal */
+        .divider {
+            border-bottom: 1px solid var(--bs-border-color); /* Utiliza el color de borde del tema */
+            margin-bottom: 1.5rem; /* Espacio debajo del divisor */
+            margin-top: -0.5rem; /* Ajusta para que esté cerca del título */
+        }
+
+        /* Estilo de las pestañas de ambiente */
+        .nav-tabs {
+            border-bottom-color: var(--bs-border-color);
+        }
+        .nav-tabs .nav-link {
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+            color: var(--bs-body-color); /* Se adapta al tema */
+            background-color: var(--bs-tertiary-bg); /* Un fondo sutil para las pestañas no activas */
+            border: 1px solid var(--bs-border-color);
+            border-bottom-color: transparent;
+        }
+        .nav-tabs .nav-link:hover {
+            border-color: var(--bs-border-color);
+            background-color: var(--bs-secondary-bg);
+            color: var(--bs-primary);
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--bs-primary); /* Color primario del tema para el activo (Lux es azul vibrante) */
+            background-color: var(--bs-card-bg); /* Fondo del card para que "salga" */
+            border-color: var(--bs-border-color);
+            border-bottom-color: transparent;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        }
+        /* Ajuste específico para el texto de la pestaña activa en modo oscuro */
+        [data-bs-theme="dark"] .nav-tabs .nav-link.active {
+            color: var(--bs-primary-text-emphasis); /* Usar el texto de énfasis del color primario en oscuro para mejor contraste */
+        }
+
+
+        /* Estilo de las tarjetas de ítems */
+        .item-card {
+            cursor: pointer;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            text-align: center;
+            transition: all 0.2s ease-in-out;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 120px;
+            background-color: var(--bs-secondary-bg);
+            color: var(--bs-body-color);
+        }
+        .item-card:hover {
+            background-color: var(--bs-primary-bg-subtle);
+            border-color: var(--bs-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+        }
+        .item-card i,.material-symbols-outlined {
+            font-size: 3rem; 
+            color: var(--bs-primary);
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+        .item-card span {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Estilo de la lista de elementos seleccionados */
+        .selected-item-list {
+            list-style: none;
+            padding: 0;
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            background-color: var(--bs-secondary-bg);
+        }
+        .selected-item-list li {
+            background-color: var(--bs-tertiary-bg);
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.35rem;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .selected-item-list li:last-child {
+            margin-bottom: 0;
+        }
+        .selected-item-list li .item-name {
+            flex-grow: 1;
+            font-weight: 500;
+        }
+        .selected-item-list li .item-controls .btn-sm {
+            margin: 0 0.2rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+        }
+        .selected-item-list li .item-controls .badge {
+            min-width: 25px;
+            padding: 0.4em 0.6em;
+            font-size: 0.8em;
+            background-color: var(--bs-primary); /* Badge en color primario */
+            color: var(--bs-primary-text-emphasis); /* Texto que contraste (se adapta al tema) */
+        }
+        /* Ajuste para el texto del badge en modo claro si el primario de Lux es oscuro y no contrasta bien */
+        [data-bs-theme="light"] .selected-item-list li .item-controls .badge {
+            color: var(--bs-white); /* Forzar blanco si el primario de Lux es oscuro */
+        }
+
+
+        /* Estilo del área de volumen total */
+        .total-volume-display-container {
+            background-color: var(--bs-dark); /* Usar el color oscuro del tema (negro) */
+            color: var(--bs-white); /* Texto blanco para asegurar contraste en ambos temas */
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .total-volume-display-container h5 {
+            margin-bottom: 0;
+            font-size: 1.25rem;
+        }
+        .total-volume-display-container strong {
+            font-size: 1.75rem;
+            display: block;
+            margin-top: 0.25rem;
+        }
+
+        /* Estilo para la sección de resultado/registro */
+        #resultSection, #registrationSection {
+            background-color: var(--bs-secondary-bg);
+            border-radius: 0.75rem;
+            box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.08);
+        }
+        #resultSection .lead {
+            color: var(--bs-info);
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        #resultSection .text-muted small {
+            font-size: 0.8rem;
+            color: var(--bs-secondary-color) !important;
+        }
+
+        /* Ajustes para los inputs genéricos */
+        .generic-item-row .form-control {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            border-color: var(--bs-border-color);
+        }
+        .generic-item-row .form-control::placeholder {
+            color: var(--bs-secondary-color);
+            opacity: 0.7;
+        }
+        .generic-item-row .btn {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            background-color: var(--bs-danger);
+            color: var(--bs-btn-danger-color);
+            border-color: var(--bs-danger);
+        }
+        [data-bs-theme="dark"] .generic-item-row .form-control.is-invalid + .btn .fa-exclamation-circle {
+            color: var(--bs-warning); /* Cambiar el color del icono de advertencia a amarillo en modo oscuro */
+        }       
+        
+        /* Ajustes generales de texto y colores en el card para ambos temas */
+        .card-title, h4, h5 {
+            color: var(--bs-heading-color);
+        }
+        .border-end {
+            border-color: var(--bs-border-color) !important;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-9">
+            <div class="card shadow-lg p-4">
+                <h1 class="card-title text-center mb-4 text-primary">Calculadora de Depósito</h1>
+                <hr class="divider"> {# Añadido el divisor #}
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="row">
+                    <div class="col-lg-7 border-end pe-lg-4">
+                        <h4 class="mb-3">Selecciona los elementos de cada ambiente:</h4>
+                        <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="living-tab" data-bs-toggle="tab" data-bs-target="#living" type="button" role="tab" aria-controls="living" aria-selected="true">Living / Comedor</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="dormitorios-tab" data-bs-toggle="tab" data-bs-target="#dormitorios" type="button" role="tab" aria-controls="dormitorios" aria-selected="false">Dormitorios</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="cocina-tab" data-bs-toggle="tab" data-bs-target="#cocina" type="button" role="tab" aria-controls="cocina" aria-selected="false">Cocina y Lavadero</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="oficina-tab" data-bs-toggle="tab" data-bs-target="#oficina" type="button" role="tab" aria-controls="oficina" aria-selected="false">Oficina</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="otros-tab" data-bs-toggle="tab" data-bs-target="#otros" type="button" role="tab" aria-controls="otros" aria-selected="false">Otros / Genérico</button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="myTabContent">
+                            <div class="tab-pane fade show active" id="living" role="tabpanel" aria-labelledby="living-tab">
+                                <h5 class="mb-3">Elementos disponibles en Living / Comedor:</h5>
+                                <div class="row row-cols-3 row-cols-md-4 g-3">
+                                    <div class="col">
+                                        <div class="item-card" data-item-id="biblioteca" data-volume="1.2" data-item-name="Biblioteca">
+                                            <i class="fa-solid fa-book"></i>
+                                            <span>Biblioteca</span>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="item-card" data-item-id="sillon-2" data-volume="0.8" data-item-name="Sillón 2 cuerpos">
+                                            <i class="fas fa-couch"></i>
+                                            <span>Sillón 2 cuerpos</span>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="item-card" data-item-id="mesa-comedor-8" data-volume="1.5" data-item-name="Mesa comedor 8 pers.">
+                                            <i class="fas fa-table"></i>
+                                            <span>Mesa comedor 8 pers.</span>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="item-card" data-item-id="sillon-3" data-volume="1.2" data-item-name="Sillón 3 cuerpos">
+                                            <i class="fas fa-couch"></i>
+                                            <span>Sillón 3 cuerpos</span>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="item-card" data-item-id="mesa-tv" data-volume="0.4" data-item-name="Mesa de TV">
+                                            <i class="fas fa-tv"></i>
+                                            <span>Mesa de TV</span>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="item-card" data-item-id="silla" data-volume="0.15" data-item-name="Silla">
+                                            <i class="fas fa-chair"></i>
+                                            <span>Silla</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="dormitorios" role="tabpanel" aria-labelledby="dormitorios-tab">
+                                <h5 class="mb-3">Elementos disponibles en Dormitorios:</h5>
+                                <div class="row row-cols-3 row-cols-md-4 g-3">
+                                    <div class="col">
+                                        <div class="item-card" data-item-id="cama-doble" data-volume="2.0" data-item-name="Cama Doble">
+                                            <i class="fas fa-bed"></i>
+                                            <span>Cama Doble</span>
+                                        </div>
+                                    </div>
+                            <div class="col">
+                                <div class="item-card" data-item-id="ropero-2puertas" data-volume="1.8" data-item-name="Ropero 2 Puertas">
+                                <span class="material-symbols-outlined">
+                                    dresser
+                                </span>
+                                <span>Ropero 2 Puertas</span>
+                                </div>
+                            </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="cocina" role="tabpanel" aria-labelledby="cocina-tab">
+                                <h5 class="mb-3">Elementos disponibles en Cocina y Lavadero:</h5>
+                                <div class="row row-cols-3 row-cols-md-4 g-3">
+                                    <div class="col">
+                                        <div class="item-card" data-item-id="heladera" data-volume="0.7" data-item-name="Heladera">
+                                            <i class="fa-solid fa-kitchen-set"></i>
+                                            <span>Heladera</span>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="item-card" data-item-id="cocina" data-volume="0.5" data-item-name="Cocina">
+                                            <i class="fa-solid fa-kitchen-set"></i>
+                                            <span>Cocina</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="oficina" role="tabpanel" aria-labelledby="oficina-tab">
+                                <h5 class="mb-3">Elementos disponibles en Oficina:</h5>
+                                <div class="row row-cols-3 row-cols-md-4 g-3">
+                                    <div class="col">
+                                        <div class="item-card" data-item-id="escritorio" data-volume="0.6" data-item-name="Escritorio">
+                                            <i class="fas fa-desktop"></i>
+                                            <span>Escritorio</span>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="item-card" data-item-id="sillon-oficina" data-volume="0.4" data-item-name="Sillón de Oficina">
+                                            <i class="fas fa-chair"></i>
+                                            <span>Sillón de Oficina</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="otros" role="tabpanel" aria-labelledby="otros-tab">
+                                <h5 class="mb-3">Ingrese el volumen de otros objetos no listados (en m³):</h5>
+                                <div id="genericItemsContainer">
+                                    <div class="input-group mb-2 generic-item-row">
+                                        <input type="text" class="form-control generic-item-description" placeholder="Descripción (Ej: 3 cajas de libros)">
+                                        <input type="number" step="0.1" class="form-control generic-item-volume" placeholder="Volumen (m³)" min="0.1">
+                                        <button type="button" class="btn btn-outline-danger remove-generic-item-btn"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </div>
+                                <button type="button" id="addGenericItemBtn" class="btn btn-outline-secondary btn-sm mt-2">Añadir otro objeto genérico</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5 ps-lg-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="mb-0">Elementos seleccionados para guardar:</h4>
+                            <button type="button" id="clearSelectedBtn" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-times me-1"></i>Limpiar
+                            </button>
+                        </div>
+                        <ul id="selectedItemsList" class="selected-item-list">
+                            <li id="noItemsMessage" class="text-muted text-center">No hay ítems seleccionados.</li>
+                        </ul>
+
+                        <div class="mt-4 p-3 total-volume-display-container">
+                            <h5>Espacio necesario estimado:</h5>
+                            <strong id="totalVolumeDisplay">0.00 m³</strong>
+                        </div>
+                        
+                        <div class="d-grid mt-3">
+                            <button type="button" id="calculatePriceBtn" class="btn btn-primary btn-lg">Calcular Precio</button>
+                        </div>
+
+                        <div id="resultSection" class="mt-4 p-3 rounded" style="display: none;">
+                            <h4 class="text-center">Resultado del Cálculo</h4>
+                            <div id="calculationResult" class="lead text-center mb-3"></div>
+                            <div id="boxRecommendation" class="text-center text-muted small"></div>
+                            <p class="text-center mt-3 mb-0 text-muted">
+                                <small>Nota: Precios estimados entre $5.000 y $10.000 ARS por m³.</small>
+                            </p>
+                        </div>
+
+                        <div id="registrationSection" class="card mt-4 p-4 shadow-sm" style="display: none;">
+                            <h3 class="card-title text-center mb-4">Registrar y Reservar</h3>
+                            <form id="registrationForm" action="{{ url_for('registrar_producto') }}" method="POST">
+                                <input type="hidden" id="regTipoObjeto" name="tipo_objeto">
+                                <input type="hidden" id="regNombreObjeto" name="nombre_objeto">
+                                <input type="hidden" id="regVolumen" name="volumen">
+                                <input type="hidden" id="regPrecio" name="precio_calculado">
+                                <input type="hidden" id="regCaja" name="caja_recomendada">
+
+                                <div class="mb-3">
+                                    <label for="nombreCliente" class="form-label">Tu Nombre:</label>
+                                    <input type="text" class="form-control" id="nombreCliente" name="nombre_cliente" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="emailCliente" class="form-label">Tu Email:</label>
+                                    <input type="email" class="form-control" id="emailCliente" name="email_cliente" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="telefonoCliente" class="form-label">Teléfono (opcional):</label>
+                                    <input type="tel" class="form-control" id="telefonoCliente" name="telefono_cliente">
+                                </div>
+                                
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success">Confirmar Registro y Reserva</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const itemCards = document.querySelectorAll('.item-card');
+            const selectedItemsList = document.getElementById('selectedItemsList');
+            const noItemsMessage = document.getElementById('noItemsMessage');
+            const totalVolumeDisplay = document.getElementById('totalVolumeDisplay');
+            const calculatePriceBtn = document.getElementById('calculatePriceBtn');
+            const resultSection = document.getElementById('resultSection');
+            const calculationResultDiv = document.getElementById('calculationResult');
+            const boxRecommendationDiv = document.getElementById('boxRecommendation');
+            const registrationSection = document.getElementById('registrationSection');
+            const clearSelectedBtn = document.getElementById('clearSelectedBtn');
+
+            const addGenericItemBtn = document.getElementById('addGenericItemBtn');
+            const genericItemsContainer = document.getElementById('genericItemsContainer');
+
+            const regTipoObjeto = document.getElementById('regTipoObjeto');
+            const regNombreObjeto = document.getElementById('regNombreObjeto');
+            const regVolumen = document.getElementById('regVolumen');
+            const regPrecio = document.getElementById('regPrecio');
+            const regCaja = document.getElementById('regCaja');
+
+            const selectedItems = {};
+
+            function updateSelectedItemsDisplay() {
+                selectedItemsList.innerHTML = '';
+                let totalVolume = 0;
+                let hasItems = false;
+
+                for (const id in selectedItems) {
+                    const item = selectedItems[id];
+                    if (item.quantity > 0) {
+                        hasItems = true;
+                        totalVolume += item.volume * item.quantity;
+
+                        const li = document.createElement('li');
+                        li.dataset.itemId = id;
+                        li.innerHTML = `
+                            <span class="item-name">${item.name}</span>
+                            <div class="item-controls">
+                                <button type="button" class="btn btn-sm btn-outline-secondary minus-btn" data-item-id="${id}"><i class="fas fa-minus"></i></button>
+                                <span class="badge bg-primary text-white rounded-pill me-2">${item.quantity}</span> {# Forzado text-white para que siempre se vea bien en el badge primario #}
+                                <button type="button" class="btn btn-sm btn-outline-secondary plus-btn" data-item-id="${id}"><i class="fas fa-plus"></i></button>
+                                <button type="button" class="btn btn-sm btn-danger remove-item-btn" data-item-id="${id}"><i class="fas fa-trash"></i></button>
+                            </div>
+                        `;
+                        selectedItemsList.appendChild(li);
+                    }
+                }
+
+                if (!hasItems) {
+                    noItemsMessage.style.display = 'block';
+                } else {
+                    noItemsMessage.style.display = 'none';
+                }
+
+                totalVolumeDisplay.textContent = (totalVolume + getGenericItemsTotalVolume()).toFixed(2) + ' m³'; 
+                updateVisibilityOfResultAndRegistration();
+            }
+
+            function handleItemClick(event) {
+                const card = event.currentTarget;
+                const itemId = card.dataset.itemId;
+                const itemName = card.dataset.itemName;
+                const itemVolume = parseFloat(card.dataset.volume);
+
+                if (selectedItems[itemId]) {
+                    selectedItems[itemId].quantity++;
+                } else {
+                    selectedItems[itemId] = { name: itemName, volume: itemVolume, quantity: 1 };
+                }
+                updateSelectedItemsDisplay();
+            }
+
+            function adjustItemQuantity(event) {
+                const btn = event.target.closest('button');
+                if (!btn) return;
+                const itemId = btn.dataset.itemId;
+
+                if (btn.classList.contains('plus-btn')) {
+                    selectedItems[itemId].quantity++;
+                } else if (btn.classList.contains('minus-btn')) {
+                    selectedItems[itemId].quantity--;
+                    if (selectedItems[itemId].quantity <= 0) {
+                        delete selectedItems[itemId];
+                    }
+                } else if (btn.classList.contains('remove-item-btn')) {
+                    delete selectedItems[itemId];
+                }
+                updateSelectedItemsDisplay();
+            }
+
+            function clearSelectedItems() {
+                for (const id in selectedItems) {
+                    delete selectedItems[id];
+                }
+                document.querySelectorAll('.generic-item-row').forEach(row => row.remove());
+                const otrosTab = document.getElementById('otros-tab');
+                if (otrosTab && otrosTab.classList.contains('active')) {
+                    addGenericInputField();
+                } else {
+                    if (genericItemsContainer.children.length === 0) {
+                        addGenericInputField();
+                    }
+                }
+                
+                updateSelectedItemsDisplay();
+            }
+
+            itemCards.forEach(card => {
+                card.addEventListener('click', handleItemClick);
+            });
+
+            selectedItemsList.addEventListener('click', adjustItemQuantity);
+
+            clearSelectedBtn.addEventListener('click', clearSelectedItems);
+
+            function addGenericInputField() {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('input-group', 'mb-2', 'generic-item-row');
+                itemDiv.innerHTML = `
+                    <input type="text" class="form-control generic-item-description" placeholder="Descripción (Ej: 3 cajas de libros)">
+                    <input type="number" step="0.1" class="form-control generic-item-volume" placeholder="Volumen (m³)" min="0.1">
+                    <button type="button" class="btn btn-outline-danger remove-generic-item-btn"><i class="fas fa-trash"></i></button>
+                `;
+                genericItemsContainer.appendChild(itemDiv);
+                itemDiv.querySelector('.generic-item-volume').addEventListener('input', updateProvisionalTotalGeneric);
+                itemDiv.querySelector('.remove-generic-item-btn').addEventListener('click', function() {
+                    itemDiv.remove();
+                    updateProvisionalTotalGeneric();
+                });
+                updateProvisionalTotalGeneric();
+            }
+
+            function updateProvisionalTotalGeneric() {
+                let totalGeneric = 0;
+                document.querySelectorAll('.generic-item-volume').forEach(input => {
+                    const value = parseFloat(input.value);
+                    if (!isNaN(value) && value > 0) {
+                        totalGeneric += value;
+                    }
+                    if (input.value === "" || isNaN(value)) {
+                        input.classList.add('is-invalid'); 
+                    } else {
+                        input.classList.remove('is-invalid');
+                    }
+                });
+                totalVolumeDisplay.textContent = (getPredefinedItemsTotalVolume() + totalGeneric).toFixed(2) + ' m³'; 
+                updateVisibilityOfResultAndRegistration();
+            }
+
+            addGenericItemBtn.addEventListener('click', addGenericInputField);
+
+            genericItemsContainer.addEventListener('input', function(event) {
+                if (event.target.classList.contains('generic-item-volume')) {
+                    updateProvisionalTotalGeneric();
+                }
+            });
+
+            function getPredefinedItemsTotalVolume() {
+                let total = 0;
+                for (const id in selectedItems) {
+                    const item = selectedItems[id];
+                    total += item.volume * item.quantity;
+                }
+                return total;
+            }
+
+            function getGenericItemsTotalVolume() {
+                let total = 0;
+                document.querySelectorAll('.generic-item-volume').forEach(input => {
+                    const value = parseFloat(input.value);
+                    if (!isNaN(value) && value > 0) {
+                        total += value;
+                    }
+                    if (input.value === "" || isNaN(value)) {
+                        input.classList.add('is-invalid'); 
+                    } else {
+                        input.classList.remove('is-invalid');
+                    }
+                });
+                return total;
+            }
+            
+            document.querySelectorAll('.nav-link').forEach(tabBtn => {
+                tabBtn.addEventListener('shown.bs.tab', function (event) {
+                    if (event.target.id === 'otros-tab' && genericItemsContainer.children.length === 0) {
+                        addGenericInputField();
+                    }
+                    updateProvisionalTotalGeneric(); 
+                });
+            });
+
+            if (document.getElementById('otros-tab').classList.contains('active') && genericItemsContainer.children.length === 0) {
+                addGenericInputField();
+            }
+
+
+            calculatePriceBtn.addEventListener('click', async function() {
+                let totalCalculatedVolume = getPredefinedItemsTotalVolume() + getGenericItemsTotalVolume();
+
+                const genericVolumeInputs = document.querySelectorAll('.generic-item-volume');
+                let allGenericVolumesValid = true;
+                genericVolumeInputs.forEach(input => {
+                    const value = parseFloat(input.value);
+                    const description = input.previousElementSibling.value.trim();
+                    if ((description && (isNaN(value) || value <= 0)) || (!description && (isNaN(value) || value <= 0) && genericVolumeInputs.length > 1) ) {
+                        input.classList.add('is-invalid');
+                        allGenericVolumesValid = false;
+                    } else {
+                        input.classList.remove('is-invalid');
+                    }
+                });
+
+                if (!allGenericVolumesValid) {
+                    alert('Por favor, complete los volúmenes de los objetos genéricos o elimine las filas vacías/inválidas.');
+                    resultSection.style.display = 'none';
+                    registrationSection.style.display = 'none';
+                    return;
+                }
+
+                if (totalCalculatedVolume <= 0) {
+                    alert('Por favor, seleccione o ingrese al menos un volumen válido para calcular el precio.');
+                    resultSection.style.display = 'none';
+                    registrationSection.style.display = 'none';
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/depositoweb/calcular_precio', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ volumen: totalCalculatedVolume })
+                    });
+                    const data = await res.json();
+
+                    if (data.precio) {
+                        calculationResultDiv.innerHTML = `El precio estimado es: <strong>$${data.precio}</strong> ARS`;
+                        boxRecommendationDiv.innerHTML = `Caja recomendada: <strong>${data.caja_recomendada}</strong>`;
+                        resultSection.style.display = 'block';
+                        registrationSection.style.display = 'block';
+
+                        let combinedObjectName = [];
+                        for(const id in selectedItems) {
+                            if(selectedItems[id].quantity > 0) {
+                                combinedObjectName.push(`${selectedItems[id].name} (x${selectedItems[id].quantity})`);
+                            }
+                        }
+                        document.querySelectorAll('.generic-item-row').forEach(row => {
+                            const desc = row.querySelector('.generic-item-description').value.trim();
+                            const vol = parseFloat(row.querySelector('.generic-item-volume').value);
+                            if(desc && !isNaN(vol) && vol > 0) {
+                                combinedObjectName.push(`${desc} (${vol}m³)`);
+                            } else if (!isNaN(vol) && vol > 0) {
+                                combinedObjectName.push(`Objeto genérico (${vol}m³)`);
+                            }
+                        });
+
+                        regTipoObjeto.value = combinedObjectName.length > 0 ? 'Combinado' : 'Desconocido';
+                        regNombreObjeto.value = combinedObjectName.length > 0 ? combinedObjectName.join(', ') : 'No especificado';
+                        regVolumen.value = totalCalculatedVolume.toFixed(2);
+                        regPrecio.value = data.precio;
+                        regCaja.value = data.caja_recomendada;
+
+                    } else {
+                        calculationResultDiv.innerText = 'Error: ' + data.error;
+                        boxRecommendationDiv.innerText = '';
+                        resultSection.style.display = 'block';
+                        registrationSection.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error al calcular el precio:', error);
+                    calculationResultDiv.innerText = 'Error de conexión con el servidor.';
+                    boxRecommendationDiv.innerText = '';
+                    resultSection.style.display = 'block';
+                    registrationSection.style.display = 'none';
+                }
+            });
+
+            function updateVisibilityOfResultAndRegistration() {
+                const totalCurrentVolume = getPredefinedItemsTotalVolume() + getGenericItemsTotalVolume();
+                if (totalCurrentVolume > 0) {
+                    resultSection.style.display = 'none'; 
+                    registrationSection.style.display = 'none';
+                } else {
+                    resultSection.style.display = 'none';
+                    registrationSection.style.display = 'none';
+                }
+            }
+            updateVisibilityOfResultAndRegistration();
+        });
+    </script>
+{% endblock %}

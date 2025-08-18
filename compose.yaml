@@ -1,0 +1,95 @@
+version: "3.9"
+
+services:
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    environment:
+      - PMA_HOST=mariadb
+      - PMA_ABSOLUTE_URI=https://${DOMINIO}:${PUERTO}/phpmyadmin/
+    ports:
+      - 8080:80
+    depends_on:
+      - mariadb
+    networks:
+      - deposito_net
+  swag:
+      image: lscr.io/linuxserver/swag:latest
+      container_name: swag
+      cap_add:
+        - NET_ADMIN
+      environment:
+        - PUID=1000
+        - PGID=1000
+        - TZ=America/Argentina/Buenos_Aires
+        - URL=${DOMINIO}
+        - VALIDATION=dns
+        - DNSPLUGIN=duckdns
+        - SUBDOMAINS=
+      volumes:
+        - ./swag:/config
+      ports:
+        - ${PUERTO}:443/tcp
+        - 80:80
+      restart: unless-stopped
+      networks:
+      - deposito_net
+
+  mariadb:
+    image: mariadb:10.5
+    container_name: mariadb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MARIADB_DB}
+      MYSQL_USER: ${MARIADB_USER}
+      MYSQL_PASSWORD: ${MARIADB_USER_PASS}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - deposito_net
+
+  depositoweb:
+    build:
+      context: ./depositoweb
+    container_name: depositoweb
+    restart: unless-stopped
+    environment:
+      - SERVIDOR=${SERVIDOR}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+      - MARIADB_USER=${MARIADB_USER}
+      - MARIADB_USER_PASS=${MARIADB_USER_PASS}
+      - MARIADB_DB=${MARIADB_DB}
+      - MARIADB_SERVER=${MARIADB_SERVER}
+      - MARIADB_TABLE=${MARIADB_TABLE}
+      - DOMINIO=${DOMINIO}
+      - PUERTO=${PUERTO}
+      - TB_TOKEN=${TB_TOKEN}
+      - TB_AUTORIZADOS=${TB_AUTORIZADOS}
+      - ID=${ID}
+      - CRUD_DB=${CRUD_DB}
+      - CRUD_USER=${CRUD_USER}
+      - CRUD_PASS=${CRUD_PASS}
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+      - INFLUX_TOKEN=${INFLUX_TOKEN}
+      - INFLUX_SERVER=${INFLUX_SERVER}
+      - TELEGRAM_CHATID=${TELEGRAM_CHATID}
+      - MYSQL_USER=${MARIADB_USER}
+      - MYSQL_PASSWORD=${MARIADB_USER_PASS}
+      - MYSQL_DB=${MARIADB_DB}
+      - MYSQL_HOST=mariadb
+    ports:
+      - "8007:8007"
+    depends_on:
+      - mariadb
+    networks:
+      - deposito_net
+
+volumes:
+  mariadb_data:
+
+networks:
+  deposito_net:
+    driver: bridge
