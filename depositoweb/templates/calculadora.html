@@ -11,6 +11,7 @@
         <div class="col-md-10 col-lg-9">
             <div class="card shadow-lg p-4">
                 <h1 class="card-title text-center mb-4">Calculadora de Depósito</h1>
+                <input type="hidden" id="calcularPrecioURL" value="{{ url_for('calcular_precio') }}">
                 <hr class="divider"> {# Añadido el divisor #}
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -152,7 +153,7 @@
                                         <button type="button" class="btn btn-outline-danger remove-generic-item-btn"><i class="fas fa-trash"></i></button>
                                     </div>
                                 </div>
-                                <button type="button" id="addGenericItemBtn" class="btn btn-outline-secondary btn-sm mt-2">Añadir otro objeto genérico</button>
+                                <button type="button" id="addGenericItemBtn" class="btn btn-outline-secondary btn-sm mt-2">Añadir un objeto genérico</button>
                             </div>
                         </div>
                     </div>
@@ -163,7 +164,7 @@
                                 <button class="nav-link active" id="summary-tab" data-bs-toggle="tab" data-bs-target="#tabResumen" type="button" role="tab" aria-controls="tabResumen" aria-selected="true">Seleccionados</button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link disabled" id="contacto-tab" type="button" role="tab" aria-controls="tabContacto" aria-selected="false" aria-disabled="true" tabindex="-1">Contacto</button>
+                                <button class="nav-link disabled" id="contacto-tab" data-bs-toggle="tab" data-bs-target="#tabContacto" type="button" role="tab" aria-controls="tabContacto" aria-selected="false" aria-disabled="true" tabindex="-1">Contacto</button>
                             </li>
                         </ul>
 
@@ -180,9 +181,9 @@
                                 </ul>
 
                                 <div id="genericSummary" class="mt-3">
-                                    <h6 class="mb-2 text-muted">Ítems genéricos ingresados:</h6>
+                                    <h6 class="mb-2 text-muted">Objetos Extras Ingresados:</h6>
                                     <ul id="genericSummaryList" class="selected-item-list">
-                                        <li id="noGenericMessage" class="text-muted text-center">No hay ítems genéricos.</li>
+                                        <li id="noGenericMessage" class="text-muted text-center">No hay objetos extras.</li>
                                     </ul>
                                 </div>
 
@@ -208,7 +209,7 @@
                                     <div id="calculationResult" class="lead text-center mb-3"></div>
                                     <div id="boxRecommendation" class="text-center text-muted small"></div>
                                     <p class="text-center mt-3 mb-0 text-muted">
-                                        <small>Nota: Precios estimados entre $5.000 y $10.000 ARS por m³.</small>
+                                        <small>Nota: Precios estimados.</small>
                                     </p>
                                 </div>
                             </div>
@@ -279,6 +280,7 @@
             const regCaja = document.getElementById('regCaja');
 
             const selectedItems = {};
+            let calculationReady = false;
 
             function updateSelectedItemsDisplay() {
                 selectedItemsList.innerHTML = '';
@@ -386,6 +388,18 @@
                 }
                 document.querySelectorAll('.generic-item-row').forEach(row => row.remove());
                 updateSelectedItemsDisplay();
+                // Reset cálculo y pestaña contacto
+                calculationReady = false;
+                resultSection.style.display = 'none';
+                registrationSection.style.display = 'none';
+                if (contactTab) {
+                    contactTab.classList.add('disabled');
+                    contactTab.setAttribute('aria-disabled','true');
+                    contactTab.setAttribute('tabindex','-1');
+                    if (window.bootstrap && bootstrap.Tab) {
+                        bootstrap.Tab.getOrCreateInstance(document.getElementById('summary-tab')).show();
+                    }
+                }
             }
 
             itemCards.forEach(card => {
@@ -584,7 +598,8 @@
                 }
 
                 try {
-                    const res = await fetch('/depositoweb/calcular_precio', {
+                    const endpoint = document.getElementById('calcularPrecioURL')?.value || '/calcular_precio';
+                    const res = await fetch(endpoint, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ volumen: totalCalculatedVolume })
@@ -596,6 +611,7 @@
                         boxRecommendationDiv.innerHTML = `Caja recomendada: <strong>${data.caja_recomendada}</strong>`;
                         resultSection.style.display = 'block';
                         registrationSection.style.display = 'block';
+                        calculationReady = true;
                         // Habilitar pestaña de contacto y activarla
                         if (contactTab) {
                             contactTab.classList.remove('disabled');
@@ -639,6 +655,7 @@
                         boxRecommendationDiv.innerText = '';
                         resultSection.style.display = 'block';
                         registrationSection.style.display = 'none';
+                        calculationReady = false;
                     }
                 } catch (error) {
                     console.error('Error al calcular el precio:', error);
@@ -646,6 +663,7 @@
                     boxRecommendationDiv.innerText = '';
                     resultSection.style.display = 'block';
                     registrationSection.style.display = 'none';
+                    calculationReady = false;
                     if (contactTab) {
                         contactTab.classList.add('disabled');
                         contactTab.setAttribute('aria-disabled','true');
@@ -659,13 +677,21 @@
 
             function updateVisibilityOfResultAndRegistration() {
                 const totalCurrentVolume = getPredefinedItemsTotalVolume() + getGenericItemsTotalVolume();
-                if (totalCurrentVolume > 0) {
-                    resultSection.style.display = 'none'; 
-                    registrationSection.style.display = 'none';
-                } else {
+                if (totalCurrentVolume <= 0) {
+                    // Sin volumen: ocultar resultados y contacto, volver a resumen
                     resultSection.style.display = 'none';
                     registrationSection.style.display = 'none';
+                    calculationReady = false;
+                    if (contactTab) {
+                        contactTab.classList.add('disabled');
+                        contactTab.setAttribute('aria-disabled','true');
+                        contactTab.setAttribute('tabindex','-1');
+                        if (window.bootstrap && bootstrap.Tab) {
+                            bootstrap.Tab.getOrCreateInstance(document.getElementById('summary-tab')).show();
+                        }
+                    }
                 }
+                // Si hay volumen, no tocar visibilidad aquí; el flujo de cálculo controla los paneles
             }
             updateVisibilityOfResultAndRegistration();
         });

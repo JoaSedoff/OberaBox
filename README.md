@@ -53,8 +53,8 @@ Para ejecutar este proyecto de forma local, necesitas tener instalado:
 
 1.  **Clonar el repositorio:**
     ```bash
-    git clone [https://www.youtube.com/watch?v=3GymExBkKjE](https://www.youtube.com/watch?v=3GymExBkKjE)
-    cd [nombre del repositorio]
+    git clone https://github.com/JoaSedoff/OberaBox.git
+    cd OberaBox
     ```
 
 2.  **Configurar las variables de entorno:**
