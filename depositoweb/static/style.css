@@ -1,0 +1,202 @@
+/*
+  OberáBox — Theme and UI overrides
+  Goal: modern dark-blue + orange aesthetic without breaking backend.
+  Applies globally via base.html. Keeps existing IDs and structure.
+*/
+
+/* ---------- Color system ---------- */
+:root {
+  --obx-accent: #ff7a00; /* orange */
+  --obx-accent-600: #e86e00;
+  --obx-accent-700: #c65f00;
+  --obx-navy-900: #0f1217; /* deep blue/near-black */
+  --obx-navy-800: #121821;
+  --obx-navy-700: #161b22;
+  --obx-border-dark: #273043;
+  --obx-text: #e8eef7;
+  --obx-muted: #a5b0c1;
+  --obx-shadow: 0 10px 25px rgba(0,0,0,.30);
+  --obx-radius-lg: 18px;
+  --obx-radius: 12px;
+}
+
+/* Light theme overrides */
+[data-bs-theme="light"] {
+  --bs-body-bg: #f7f8fb;
+  --bs-body-color: #0f1115;
+  --bs-border-color: #e5e7ef;
+  --bs-card-bg: #ffffff;
+  --bs-secondary-bg: #f7f8fb;
+  --bs-tertiary-bg: #ffffff;
+  --bs-heading-color: #0f1115;
+  --bs-primary: var(--obx-accent);
+}
+
+/* Dark theme overrides */
+[data-bs-theme="dark"] {
+  --bs-body-bg: var(--obx-navy-900);
+  --bs-body-color: var(--obx-text);
+  --bs-border-color: var(--obx-border-dark);
+  --bs-card-bg: var(--obx-navy-800);
+  --bs-secondary-bg: var(--obx-navy-700);
+  --bs-tertiary-bg: var(--obx-navy-800);
+  --bs-heading-color: var(--obx-text);
+  --bs-link-color: var(--obx-accent);
+  --bs-primary: var(--obx-accent);
+}
+
+/* Background flourish similar to the example page */
+body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(255,122,0,.12), transparent 60%),
+    radial-gradient(900px 500px at 110% -20%, rgba(255,122,0,.10), transparent 60%),
+    var(--bs-body-bg) !important;
+}
+
+/* Material Symbols settings */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+}
+
+/* ---------- Navbar & Footer ---------- */
+.navbar {
+  backdrop-filter: saturate(1.15) blur(8px);
+  border-bottom: 1px solid var(--bs-border-color);
+}
+.navbar-brand {
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+.navbar-brand img { height: 28px; width: auto; border-radius: 6px; }
+.navbar-brand .brand-box-icon { width: 30px; height: 30px; color: var(--bs-primary); }
+.navbar .nav-link.active {
+  color: var(--bs-primary) !important;
+}
+footer {
+  border-top: 1px solid var(--bs-border-color);
+}
+
+/* ---------- Cards and panels ---------- */
+.card {
+  border: none !important;
+  border-radius: var(--obx-radius-lg) !important;
+  box-shadow: var(--obx-shadow) !important;
+}
+.divider {
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+/* ---------- Tabs (pill style) ---------- */
+.nav-tabs {
+  border-bottom-color: var(--bs-border-color) !important;
+}
+.nav-tabs .nav-link {
+  border-radius: 999px !important;
+  border: 1px solid var(--bs-border-color) !important;
+  background: var(--bs-tertiary-bg) !important;
+  color: var(--bs-body-color) !important;
+  padding: 0.45rem 0.9rem;
+}
+.nav-tabs .nav-link:hover {
+  border-color: color-mix(in oklab, var(--bs-border-color), white 14%);
+}
+.nav-tabs .nav-link.active {
+  color: #fff !important;
+  background: color-mix(in oklab, var(--bs-primary), black 8%) !important;
+  border-color: transparent !important;
+  box-shadow: 0 -2px 6px rgba(0,0,0,.18);
+}
+
+/* ---------- Item catalog cards ---------- */
+.item-card {
+  cursor: pointer;
+  border: 1px solid var(--bs-border-color) !important;
+  border-radius: var(--obx-radius) !important;
+  padding: 0.9rem !important;
+  text-align: center;
+  transition: transform .06s ease, background .2s ease, border-color .2s ease;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 120px;
+  background: var(--bs-secondary-bg) !important;
+  color: var(--bs-body-color) !important;
+}
+.item-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--bs-primary), white 60%);
+}
+.item-card i, .item-card .material-symbols-outlined, .item-card svg {
+  font-size: 2rem; color: var(--bs-primary); margin-bottom: 0.35rem;
+}
+.item-card svg { width: 32px; height: 32px; }
+.item-card span { font-weight: 600; font-size: .95rem; }
+
+/* ---------- Selected list ---------- */
+.selected-item-list {
+  list-style: none; padding: 0.75rem; max-height: 360px; overflow-y: auto;
+  border: 1px solid var(--bs-border-color); border-radius: var(--obx-radius);
+  background: var(--bs-secondary-bg);
+}
+.selected-item-list li {
+  background: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 12px; padding: .55rem .7rem; margin-bottom: .5rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.selected-item-list li .item-name { font-weight: 600; }
+.selected-item-list .btn-sm { border-radius: 10px; }
+.selected-item-list .badge {
+  background: var(--bs-primary) !important;
+  color: #fff !important;
+}
+
+/* ---------- KPI / total volume ---------- */
+.total-volume-display-container {
+  background: var(--obx-navy-700) !important;
+  color: #fff; border-radius: var(--obx-radius-lg);
+  box-shadow: var(--obx-shadow);
+}
+.total-volume-display-container strong { font-size: 1.65rem; }
+
+/* Make total volume box adapt to theme */
+[data-bs-theme="light"] .total-volume-display-container {
+  background: var(--bs-card-bg) !important;
+  color: var(--bs-body-color) !important;
+  border: 1px solid var(--bs-border-color);
+}
+
+/* Increase spacing between category tabs */
+.nav-tabs {
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+/* ---------- Buttons ---------- */
+.btn-primary {
+  background: var(--obx-accent) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+.btn-primary:hover { background: var(--obx-accent-600) !important; }
+.btn-outline-secondary { border-color: var(--bs-border-color) !important; }
+.btn-outline-danger { border-color: color-mix(in oklab, var(--bs-danger), black 10%) !important; }
+
+/* ---------- Result & registration panels ---------- */
+#resultSection, #registrationSection {
+  background: var(--bs-secondary-bg) !important;
+  border-radius: var(--obx-radius-lg) !important;
+  box-shadow: var(--obx-shadow) !important;
+  border: 1px solid var(--bs-border-color);
+}
+#resultSection .lead { color: var(--bs-primary) !important; font-weight: 800; }
+
+/* ---------- Forms (generic inputs inside Otros) ---------- */
+.generic-item-row .form-control {
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  border-color: var(--bs-border-color);
+}
+.generic-item-row .form-control::placeholder { color: color-mix(in oklab, var(--bs-body-color), transparent 55%); }
+.generic-item-row .btn { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+
+/* Subtle container spacing */
+main .container { padding-bottom: 1rem; }
