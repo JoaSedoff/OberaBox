@@ -34,7 +34,7 @@
                 <th>Teléfono</th>
                 <th>Tipo Objeto</th>
                 <th>Descripción Objeto</th>
-                <th>Volumen (m³)</th>
+                <th>Superficie (m²)</th>
                 <th>Precio Estimado</th>
                 <th>Caja Recomendada</th>
             </tr>
@@ -49,7 +49,7 @@
                 <td>{{ registro.telefono_cliente if registro.telefono_cliente else 'N/A' }}</td>
                 <td>{{ registro.tipo_objeto }}</td>
                 <td>{{ registro.nombre_objeto }}</td>
-                <td>{{ "%.2f"|format(registro.volumen) }}</td>
+                <td>{{ "%.2f"|format(registro.superficie) }}</td>
                 <td>${{ registro.precio_calculado }} ARS</td>
                 <td>{{ registro.caja_recomendada }}</td>
             </tr>

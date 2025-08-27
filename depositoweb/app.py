@@ -6,9 +6,9 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
 from telegram import Bot
 from telegram.error import TelegramError
-# from sqlalchemy.orm import DeclarativeBase # No se necesita directamente aquí
 
-# logging.basicConfig(format='%(asctime)s - CRUD - %(levelname)s - %(message)s', level=logging.INFO)
+
+logging.basicConfig(format='%(asctime)s - CRUD - %(levelname)s - %(message)s', level=logging.INFO)
 
 
 
@@ -22,17 +22,17 @@ app.wsgi_app = ProxyFix(
 
 
 
-# --- Configuración de Flask ---
-app.secret_key = os.environ["FLASK_SECRET_KEY"] # Usa esta como clave de sesión
+# -------------- FLASK ----------------
+app.secret_key = os.environ["FLASK_SECRET_KEY"] 
 
 
-#Tokens de Telegram
-TELEGRAM_BOT_TOKEN = os.getenv('TB_TOKEN') # Asegúrate de definir esto en tu .env
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHATID')     # Asegúrate de definir esto en tu .env (puede ser un ID de usuario o de grupo)
+#--------------- TELEGRAM ------------
+TELEGRAM_BOT_TOKEN = os.getenv('TB_TOKEN') 
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHATID')     
 
 
 
-# --- Configuración de la Base de Datos para MariaDB/MySQL con SQLAlchemy ---
+# ------------- SQLALCHEMY -------------
 
 DB_USER = os.environ.get('MARIADB_USER')
 DB_PASSWORD = os.environ.get('MARIADB_USER_PASS')
@@ -46,6 +46,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app) 
 
 #----- MODELADO DE LA BASE DE DATOS ---------------
+
 class RegistroDeposito(db.Model):
     __tablename__ = 'registros_deposito'
 
@@ -55,15 +56,15 @@ class RegistroDeposito(db.Model):
     telefono_cliente = db.Column(db.String(20), nullable=True)
     tipo_objeto = db.Column(db.String(50), nullable=False)
     nombre_objeto = db.Column(db.Text, nullable=False)
-    volumen = db.Column(db.Float, nullable=False)
+    superficie = db.Column(db.Float, nullable=False)
     precio_calculado = db.Column(db.String(50), nullable=False)
     caja_recomendada = db.Column(db.String(50), nullable=False)
-    fecha_registro = db.Column(db.DateTime, default=datetime.datetime.now) # <--- ¡CORREGIDO! Sin paréntesis
+    fecha_registro = db.Column(db.DateTime, default=datetime.datetime.now) 
 
     def __repr__(self):
         return f'<Registro {self.nombre_cliente} - {self.nombre_objeto}>'
 
-# --- MODELO PARA USUARIOS ADMINISTRADORES ---
+# -------- MODELO PARA USUARIOS ADMINISTRADORES ---------------
 class AdminUser(db.Model):
     __tablename__ = 'admin_users'
     id = db.Column(db.Integer, primary_key=True)
@@ -76,7 +77,7 @@ class AdminUser(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-# Inicializar el bot de Telegram
+# Inicialización bot de telegram
 telegram_bot = None
 if TELEGRAM_BOT_TOKEN:
     try:
@@ -100,23 +101,23 @@ def login_required(view):
 
 #---------- FUNCIONES AUXILIARES --------
 
-def calcular_precio_deposito(volumen_m3):
+def calcular_precio_deposito(superficie_m2):
     precio_base = 5000
-    costo_por_m3 = 6000
-    if volumen_m3 <= 0:
+    costo_por_m2 = 6000
+    if superficie_m2 <= 0:
         return 0
-    precio_calculado = precio_base + (volumen_m3 * costo_por_m3)
+    precio_calculado = precio_base + (superficie_m2 * costo_por_m2)
     return int(precio_calculado)
 
-def recomendar_caja(volumen_m3):
-    if volumen_m3 <= 0.5:
-        return "Caja Pequeña (hasta 0.5m³)"
-    elif volumen_m3 <= 1.5:
-        return "Caja Mediana (hasta 1.5m³)"
-    elif volumen_m3 <= 3.0:
-        return "Caja Grande (hasta 3.0m³)"
+def recomendar_caja(superficie_m2):
+    if superficie_m2 <= 0.5:
+        return "Caja Pequeña (hasta 0.5 m²)"
+    elif superficie_m2 <= 1.5:
+        return "Caja Mediana (hasta 1.5 m²)"
+    elif superficie_m2 <= 3.0:
+        return "Caja Grande (hasta 3.0 m²)"
     else:
-        return "Contenedor Especial (más de 3.0m³)"
+        return "Contenedor Especial (más de 3.0 m²)"
 
 async def send_telegram_notification(message):
     if not telegram_bot:
@@ -127,7 +128,6 @@ async def send_telegram_notification(message):
         return False
     
     try:
-        # Enviar el mensaje. El parse_mode="HTML" permite formato básico (negrita, cursiva, enlaces)
         await telegram_bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message, parse_mode="HTML")
         print(f"Notificación de Telegram enviada: {message}")
         return True
@@ -137,11 +137,14 @@ async def send_telegram_notification(message):
     except Exception as e:
         print(f"Error inesperado al enviar notificación de Telegram: {e}")
         return False
-#------ RUTAS -----------
+    
+
+
+
+#------------ RUTAS -----------
 
 @app.route('/')
 def index():
-    # current_year = datetime.datetime.now().year # No se usa si rediriges
     return redirect(url_for('calculadora'))
 
 @app.route('/login',methods = ["GET", "POST"])
@@ -162,7 +165,7 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.pop('logged_in', None) # <--- ¡CORREGIDO! Guion bajo
+    session.pop('logged_in', None)
     flash('Has cerrado sesión.','info')
     return redirect(url_for('login'))
 
@@ -175,18 +178,17 @@ def calculadora():
 def calcular_precio():
     try:
         data = request.get_json()
-        volumen = float(data['volumen'])
-        
-        precio = calcular_precio_deposito(volumen)
-        caja_recomendada = recomendar_caja(volumen)
+        superficie = float(data['superficie'])
+
+        precio = calcular_precio_deposito(superficie)
+        caja_recomendada = recomendar_caja(superficie)
         
         return jsonify({'precio': precio, 'caja_recomendada': caja_recomendada})
     except TypeError:
-        return jsonify({'error': 'Formato de datos JSON inválido. Se esperaba un número para "volumen".'}), 400
+        return jsonify({'error': 'Formato de datos JSON inválido. Se esperaba un número para "superficie".'}), 400
     except ValueError:
-        return jsonify({'error': 'El volumen debe ser un número válido.'}), 400
+        return jsonify({'error': 'La superficie debe ser un número válido.'}), 400
     except Exception as e:
-        # logging.error(f"Error en calcular_precio: {e}") # usa print o app.logger si logging no está configurado globalmente
         print(f"Error en calcular_precio: {e}")
         return jsonify({'error': f'Error interno del servidor: {str(e)}'}), 500
 
@@ -199,7 +201,7 @@ async def registrar_producto():
 
         tipo_objeto = request.form['tipo_objeto']
         nombre_objeto = request.form['nombre_objeto']
-        volumen = float(request.form['volumen'])
+        superficie = float(request.form['superficie'])
         precio = request.form['precio_calculado']
         caja = request.form['caja_recomendada']
 
@@ -209,7 +211,7 @@ async def registrar_producto():
             telefono_cliente=telefono_cliente,
             tipo_objeto=tipo_objeto,
             nombre_objeto=nombre_objeto,
-            volumen=volumen,
+            superficie=superficie,
             precio_calculado=precio,
             caja_recomendada=caja
         )
@@ -224,12 +226,12 @@ async def registrar_producto():
             f"📧 Email: {email_cliente}\n"
             f"📞 Teléfono: {telefono_cliente if telefono_cliente else 'N/A'}\n"
             f"🛋️ Objetos: {nombre_objeto}\n"
-            f"📏 Volumen: <b>{volumen} m³</b>\n"
+            f"📐 Superficie: <b>{superficie} m²</b>\n"
             f"💰 Precio Estimado: <b>${precio} ARS</b>\n"
             f"📦 Caja Recomendada: <b>{caja}</b>"
         )
         
-        # Envía la notificación (usando await porque send_telegram_notification es async)
+        #Se usa await pq send_telegram_notification es async
         await send_telegram_notification(notification_message)
 
         flash('¡Tu solicitud de depósito ha sido registrada con éxito! Te contactaremos a la brevedad.', 'success')
@@ -252,12 +254,10 @@ def listar_registros():
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all() # Esto creará las tablas si no existen
-
         if not AdminUser.query.filter_by(username='admin').first():
             print("Creando usuario admin por defecto...")
             default_admin = AdminUser(username='admin')
-            default_admin.set_password('admin123') # <--- ¡CAMBIA ESTA CONTRASEÑA EN PRODUCCIÓN!
+            default_admin.set_password('admin123')
             db.session.add(default_admin)
             db.session.commit()
             print("Usuario 'admin' creado con contraseña 'admin123'.")
